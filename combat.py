@@ -5,11 +5,13 @@ loud = False
 class Unit:
     speciality = ""
     def __repr__(self):
-        return self.speciality +" " + self.name+" "+str(self.hp) + "/"+ str(self.maxhp) +" "+ str(self.missrate)
+        
+        return str(self.speciality) +" " + str(self.name)+" "+str(self.hp) + "/"+ str(self.maxhp) +" "+ str(self.missrate)
     def __init__(self, name):
         self.name = name
         self.level = 1
         self.exp = 0
+        self.hp = 1
     def heal(self):
         self.hp += 1
     def wounded(self):
@@ -142,7 +144,7 @@ if __name__ == "__main__":
             if random.random()< 0.2:
                 unit = Healer(name)
             else:
-                unit = Combatant(name)    
+                unit = Agent(name)    
             sideA.append(unit)
         print "side A is ready for next round"
         
