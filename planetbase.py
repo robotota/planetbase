@@ -17,21 +17,31 @@ class PlanetBase(Cmd):
         self.prompt = "> "
         self.intro = "Planetbase sim"
     
+
     def do_status(self, line):
         state.printStatus()
+
+
     def help_status(self):
         print "Show current base status"
         
+
     def do_exit(self, line):
         exit()
+
+
     def help_exit(self):
         print "Exit simulation"
         
+
     def do_units(self, line):
         print state.units    
+
+
     def help_units(self):
         print "Show active units"
         
+
     def do_train(self, line):
         if line=="agent":
             starttraining(TrainableAgent(namegen.createName()))
@@ -41,13 +51,18 @@ class PlanetBase(Cmd):
             starttraining(TrainableDroid())
         else:
             print "train who?"
+
+
     def complete_train(self, text, line, i, j):
         return startswith(text, ["agent", "medic", "droid"])
+
+
     def help_train(self):
         print "Start training [agent], [medic] or [droid]"
         print "train medic"
         print "train agent"
         print "train droid"
+
 
     def do_build(self,line):
         if line == "powergen":
@@ -60,8 +75,12 @@ class PlanetBase(Cmd):
             startbuilding(PowerLine())
         else:
             print "build what?"
+
+
     def complete_build(self, text, line, i, j):
         return startswith(text, ["powergen", "massgen", "transport", "powerline"])
+
+
     def help_build(self):
         print "Start construction of new building"
         print "    build powergen"
@@ -69,52 +88,60 @@ class PlanetBase(Cmd):
         print "    build transport"
         print "    build powerline"                
         
+
     def do_stop(self, line):
         try:
             state.buildings[int(line)].stop()
         except:
             print "wrong argument"
+
     def help_stop(self):
         print "Stop active building"
         print "    stop NUMBER"        
             
-    def do_start(self, line):            
+
+    def do_start(self, line):
         try:
             state.buildings[int(line)].start()
         except:
             print "wrong argument"
+
+
     def help_start(self):
         print "Start again inactive building"
         print "    start NUMBER"            
 
+
     def default(self, line):
         print "what?!"
                 
-    def emptyline(self):
-        self.endTurn()
-        self.beginTurn()
 
-    def beginTurn(self):
+    def emptyline(self):
+        self.end_turn()
+        self.begin_turn()
+
+
+    def begin_turn(self):
         state.buildings = filter (lambda x: x!=None, state.buildings)
 
         if random.random() > 0.995 ** len(state.buildings):
-           count = int(round(random.random() * (len(state.units))) )
-           if count <= 0:
-               count = 1
-           state.warning("We were attacked by " +str(count) + " unit(s)")
-           enemy = [combat.AngryAnt("enemy") for i in range(count)]
-           combat.play(state.units, enemy)
-           if state.units == []:
-               state.badnews("Enemy broke through!")
-               for i in range(len(enemy)):
-                   b = random.choice(state.buildings)
-                   if random.random()<0.1:
-                       state.badnews(str(b) + " was destroyed")
-                       state.buildings.remove(b)   
+            count = int(round(random.random() * (len(state.units))) )
+            if count <= 0:
+                count = 1
+            state.warning("We were attacked by " +str(count) + " unit(s)")
+            enemy = [combat.AngryAnt("enemy") for i in range(count)]
+            combat.play(state.units, enemy)
+            if not state.units:
+                state.badnews("Enemy broke through!")
+                for i in range(len(enemy)):
+                    b = random.choice(state.buildings)
+                    if random.random()<0.1:
+                        state.badnews(str(b) + " was destroyed")
+                        state.buildings.remove(b)
         state.buildings.sort(key = lambda x: x.sortkey())
         state.printStatus()    
 
-    def endTurn(self):
+    def end_turn(self):
         state.clear()
 
         for building in state.buildings:
@@ -129,9 +156,7 @@ class PlanetBase(Cmd):
                 state.powerline -= 1
                 state.goodnews(unit.name+" was healed")
 
-        
-        
 
 game = PlanetBase()
-game.beginTurn()
+game.begin_turn()
 game.cmdloop()

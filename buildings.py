@@ -1,6 +1,7 @@
 import combat
 from colors import *
 
+
 class State:
     def __init__(self):
         self.energy = 0
@@ -14,6 +15,7 @@ class State:
         self.buildings = [Central(), Transport(), PowerLine()]
         self.units = []
         self.log = []
+
     def printStatus(self):
         planned_state = self.copy()
         planned_state.clear()
@@ -30,32 +32,42 @@ class State:
         print "Powerline: %d / %d"%(planned_state.powerline, planned_state.powerline_capacity)
         print "\n".join(self.log)
         self.log = []
+
     def message(self, string):
         self.log.append(color(USUAL, BLUE) + string + RESET)
+
     def warning(self, string):
         self.log.append(color(USUAL, YELLOW) + string + RESET)                
+
     def goodnews(self, string):
         self.log.append(color(USUAL, GREEN) + string + RESET)
-    def badnews(self, string):                    
+
+    def badnews(self, string):
         self.log.append(color(USUAL, RED) + string + RESET)
+
     def copy(self):
         result = State()
         fields  = [key for (key, value) in self.__dict__.items() if not callable(value) and not key.startswith('__')]
         for field in fields:
             setattr(result, field, getattr(self, field))
         return result
+
     def clear(self):
         self.transport = 0
         self.transport_capacity = 0
         self.powerline = 0
         self.powerline_capacity = 0         
+
 class Turnable:
     def start(self):
         self.on = True
+
     def stop(self):
         self.on = False    
+
     def __init__(self):
         self.on = True
+
 
 class Building(Turnable):
     def sortkey(self):
@@ -63,6 +75,7 @@ class Building(Turnable):
         
     def __str__(self):
         return "Building "+ self.next.name+" m:"+str(self.next.mass_to_build) + " e:" + str(self.next.energy_to_build)
+
     def __init__(self, next):
         Turnable.__init__(self)
         self.next = next
@@ -99,6 +112,7 @@ class TrainableAgent(combat.Agent):
         self.energy_to_build = 100
         self.name = name
 
+
 class TrainableMedic(combat.Healer):
     def __init__(self, name):
         combat.Healer.__init__(self, name)
@@ -106,23 +120,26 @@ class TrainableMedic(combat.Healer):
         self.energy_to_build = 50
         self.name = name
 
+
 class TrainableDroid(combat.BattleDroid):
     def __init__(self):
         combat.BattleDroid.__init__(self)
         self.mass_to_build = 5
         self.energy_to_build = 20
         self.name = "droid"        
-        
+
+
 class Training(Turnable):
     def sortkey(self):
-        return 'p';
+        return 'p'
         
     def __str__(self):
         return "Training "+ self.next.name+" m:"+str(self.next.mass_to_build) + " e:" + str(self.next.energy_to_build)
+
     def __init__(self, next):
         Turnable.__init__(self)
         self.next = next
-        self.built = 0;
+        self.built = 0
 
     def tick(self, state, pretend = False):
         if not self.on:
@@ -148,11 +165,15 @@ class Training(Turnable):
            state.units.append(self.next)
            state.goodnews(self.next.name + " has been trained")
 
+
 class Central(Turnable):
+
     def sortkey(self):
         return 'c';
+
     def __str__(self):
         return "Central"
+
     def tick(self, state, pretend = False):
         
         if state.powerline >0:
@@ -165,16 +186,20 @@ class Central(Turnable):
                state.energy -= 1
                state.powerline -= 1               
 
+
 class PowerGenerator(Turnable):
     def sortkey(self):
         return 'b';
+
     def __str__(self):
         return "Power Generator"
+
     def __init__(self):
         Turnable.__init__(self)
         self.mass_to_build = 5
         self.energy_to_build = 8
         self.name = "power generator"
+
     def tick(self, state, pretend = False):
         if self.on and state.powerline > 0:
             state.energy += 1
@@ -183,13 +208,16 @@ class PowerGenerator(Turnable):
 class MassGenerator(Turnable):
     def sortkey(self):
         return 'c';
+
     def __str__(self):
         return "Mass Generator"
+
     def __init__(self):
         Turnable.__init__(self)
         self.mass_to_build = 10
         self.energy_to_build = 20
         self.name = "mass generator"
+
     def tick(self, state, pretend = False):
         if self.on:
             if state.energy >= 11 and state.powerline >= 11:
@@ -200,19 +228,24 @@ class MassGenerator(Turnable):
             else:
                 state.warning("no energy for mass generator")          
 
+
 class Transport(Turnable):
     def sortkey(self):
         return 'a';
+
     def __str__(self):
         return "Transportation droid"
+
     def __init__(self):
         Turnable.__init__(self)
         self.mass_to_build = 10
         self.energy_to_build = 40    
         self.name = "transport"
+
     def tick(self, state, pretend = False):
         state.transport += 1
         state.transport_capacity += 1
+
 
 class PowerLine(Turnable):
     def sortkey(self):
@@ -220,18 +253,22 @@ class PowerLine(Turnable):
 
     def __str__(self):
         return "Power line"
+
     def __init__(self):
         Turnable.__init__(self)    
         self.mass_to_build = 10
         self.energy_to_build = 5
         self.name = "powerline"
+
     def tick(self, state, pretend = False):
         state.powerline += 5
         state.powerline_capacity += 5
            
+
 def startbuilding(what):
     state.buildings.append(Building(what))
     print "building started"
+
 
 def starttraining(who):
     state.buildings.append(Training(who))
