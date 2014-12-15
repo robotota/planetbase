@@ -5,11 +5,24 @@ import random
 import namegen
 from buildings import *
 from cmd import Cmd
+import state
+
+state = state.State()
+state.buildings = [Central(), Transport(), PowerLine()]
 
 
 def startswith(start, completes):
     return filter(lambda x: x.startswith(start), completes)
 
+
+def startbuilding(what):
+    state.buildings.append(Building(what))
+    print "building started"
+
+
+def starttraining(who):
+    state.buildings.append(Training(who))
+    print "training started"
 
 class PlanetBase(Cmd):
     def __init__(self):

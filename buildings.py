@@ -1,63 +1,6 @@
 import combat
 from colors import *
 
-
-class State:
-    def __init__(self):
-        self.energy = 0
-        self.mass = 0
-        self.energy_capacity = 0
-        self.mass_capacity = 0
-        self.transport = 0
-        self.powerline = 0
-        self.transport_capacity = 0
-        self.powerline_capacity = 0
-        self.buildings = [Central(), Transport(), PowerLine()]
-        self.units = []
-        self.log = []
-
-    def printStatus(self):
-        planned_state = self.copy()
-        planned_state.clear()
-        for building in planned_state.buildings:
-            building.tick(planned_state, pretend = True)
-        i = 0
-        for building in planned_state.buildings:
-            print i, ")", building, {False: red("Off"), True: green("On")}[building.on]
-            i += 1
-            
-        print "Energy:", self.energy
-        print "Mass:", self.mass
-        print "Transport: %d / %d" %(planned_state.transport, planned_state.transport_capacity)
-        print "Powerline: %d / %d"%(planned_state.powerline, planned_state.powerline_capacity)
-        print "\n".join(self.log)
-        self.log = []
-
-    def message(self, string):
-        self.log.append(color(USUAL, BLUE) + string + RESET)
-
-    def warning(self, string):
-        self.log.append(color(USUAL, YELLOW) + string + RESET)                
-
-    def goodnews(self, string):
-        self.log.append(color(USUAL, GREEN) + string + RESET)
-
-    def badnews(self, string):
-        self.log.append(color(USUAL, RED) + string + RESET)
-
-    def copy(self):
-        result = State()
-        fields  = [key for (key, value) in self.__dict__.items() if not callable(value) and not key.startswith('__')]
-        for field in fields:
-            setattr(result, field, getattr(self, field))
-        return result
-
-    def clear(self):
-        self.transport = 0
-        self.transport_capacity = 0
-        self.powerline = 0
-        self.powerline_capacity = 0         
-
 class Turnable:
     def start(self):
         self.on = True
@@ -265,15 +208,7 @@ class PowerLine(Turnable):
         state.powerline_capacity += 5
            
 
-def startbuilding(what):
-    state.buildings.append(Building(what))
-    print "building started"
 
 
-def starttraining(who):
-    state.buildings.append(Training(who))
-    print "training started"
 
-
-state = State()
 
