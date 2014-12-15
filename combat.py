@@ -8,7 +8,7 @@ class Unit:
 
     def __repr__(self):
         return str(self.speciality) + " " +\
-               str(self.name) + " " + str(self.hp) + "/" + str(self.maxhp) + " " + str(self.missrate)
+               str(self.name) + " " + str(self.hp) + "/" + str(self.maxhp) + " " + str(self.miss_rate)
 
     def __init__(self, name):
         self.name = name
@@ -27,7 +27,7 @@ class Unit:
         if self.exp == self.level:
             if loud:
                 print self.name, "levelup"
-            self.missrate *= 0.95
+            self.miss_rate *= 0.95
             self.maxhp += 1
             self.level += 1
             self.exp = 0
@@ -59,7 +59,7 @@ class Combatant(Unit):
     def pewpew(self, whom):
         if loud:
             print self.name, "shoots", whom.name
-        if random.random() > self.missrate:
+        if random.random() > self.miss_rate:
             whom.hit()
             self.onHit(whom)
         else:
