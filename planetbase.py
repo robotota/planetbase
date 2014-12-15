@@ -146,10 +146,17 @@ class PlanetBase(Cmd):
         if len(attackers) >0:
             state.warning("We were attacked by " +str(len(attackers)) + " unit(s)")
             real_attackers = attackers[:]
-            combat.play(state.units, real_attackers)
+
+            defenders = state.units[:]
+            combat.play(defenders, real_attackers)
             for unit in attackers:
                 if unit not in real_attackers:
                     state.enemy_units.remove(unit)
+            for unit in state.units:
+                if unit not in defenders:
+                    state.badnews(unit.name + " KIA")
+                    state.units.remove(unit)
+                    
             if not state.units:
                 state.badnews("Enemy broke through!")
                 for i in range(len(real_attackers)):
