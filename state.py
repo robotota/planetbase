@@ -12,6 +12,7 @@ class State:
         self.powerline_capacity = 0
 
         self.units = []
+        self.enemy_units = []
         self.log = []
 
     def printStatus(self):
@@ -28,7 +29,10 @@ class State:
         print "Mass:", self.mass
         print "Transport: %d / %d" %(planned_state.transport, planned_state.transport_capacity)
         print "Powerline: %d / %d"%(planned_state.powerline, planned_state.powerline_capacity)
+
         print "\n".join(self.log)
+
+        print "Enemy units:", len(self.enemy_units)
         self.log = []
 
     def message(self, string):

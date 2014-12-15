@@ -17,7 +17,8 @@ class Unit:
         self.hp = 1
 
     def heal(self):
-        self.hp += 1
+        if self.wounded():
+            self.hp += 1
 
     def wounded(self):
         return self.hp < self.maxhp    

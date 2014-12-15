@@ -1,18 +1,22 @@
 # -*- encoding: utf-8 -*-
+from libxml2 import xmlTextReaderLocator
 
-import combat
+import sys
 import random
 import namegen
 from buildings import *
 from cmd import Cmd
 import state
+import logging
 
+log_level = logging.DEBUG if "--debug" in sys.argv else logging.ERROR
+logging.basicConfig(stream=sys.stderr, level=log_level)
 state = state.State()
 state.buildings = [Central(), Transport(), PowerLine()]
+state.enemy_units = [combat.AngryAnt("enemy"), combat.AngryAnt("enemy")]
 
-
-def startswith(start, completes):
-    return filter(lambda x: x.startswith(start), completes)
+def startswith(start, names):
+    return [name for name in names if name.startswith(start)]
 
 
 def startbuilding(what):
@@ -23,6 +27,7 @@ def startbuilding(what):
 def starttraining(who):
     state.buildings.append(Training(who))
     print "training started"
+
 
 class PlanetBase(Cmd):
     def __init__(self):
@@ -135,18 +140,19 @@ class PlanetBase(Cmd):
 
 
     def begin_turn(self):
-        state.buildings = filter (lambda x: x!=None, state.buildings)
+        state.buildings = filter(lambda x: x!=None, state.buildings)
+        attackers = [unit for unit in state.enemy_units if random.random() < 0.01]
 
-        if random.random() > 0.995 ** len(state.buildings):
-            count = int(round(random.random() * (len(state.units))) )
-            if count <= 0:
-                count = 1
-            state.warning("We were attacked by " +str(count) + " unit(s)")
-            enemy = [combat.AngryAnt("enemy") for i in range(count)]
-            combat.play(state.units, enemy)
+        if len(attackers) >0:
+            state.warning("We were attacked by " +str(len(attackers)) + " unit(s)")
+            real_attackers = attackers[:]
+            combat.play(state.units, real_attackers)
+            for unit in attackers:
+                if unit not in real_attackers:
+                    state.enemy_units.remove(unit)
             if not state.units:
                 state.badnews("Enemy broke through!")
-                for i in range(len(enemy)):
+                for i in range(len(real_attackers)):
                     b = random.choice(state.buildings)
                     if random.random()<0.1:
                         state.badnews(str(b) + " was destroyed")
@@ -154,12 +160,7 @@ class PlanetBase(Cmd):
         state.buildings.sort(key = lambda x: x.sortkey())
         state.printStatus()    
 
-    def end_turn(self):
-        state.clear()
-
-        for building in state.buildings:
-            building.tick(state)
-            
+    def autoheal(self):
         for unit in state.units:
             if unit.wounded() and state.transport >0 and state.mass > 0 and state.energy >0 and state.powerline >0:
                 unit.heal()
@@ -169,6 +170,27 @@ class PlanetBase(Cmd):
                 state.powerline -= 1
                 state.goodnews(unit.name+" was healed")
 
+    def tick_buildings(self):
+        for building in state.buildings:
+            building.tick(state)
+
+    def tick_enemy(self):
+        new_units = []
+        for unit in state.enemy_units:
+            r = random.random()
+            if r < 0.01:
+                unit.levelup()
+            elif r < 0.03:
+                new_units.append(combat.AngryAnt("enemy"))
+            elif r<0.5:
+                unit.heal()
+        state.enemy_units += new_units
+
+    def end_turn(self):
+        state.clear()
+        self.tick_buildings()
+        self.autoheal()
+        self.tick_enemy()
 
 game = PlanetBase()
 game.begin_turn()
