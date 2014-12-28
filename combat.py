@@ -15,6 +15,7 @@ class Unit:
         self.level = 1
         self.exp = 0
         self.hp = 1
+        self.attacking = False
 
     def heal(self):
         if self.wounded():
@@ -47,6 +48,8 @@ class Unit:
     def dead(self):
         return self.hp <= 0          
 
+    def set_attacking(self, value):
+        self.attacking = value
 
 class Combatant(Unit):
     speciality = "agent"
@@ -80,6 +83,8 @@ class BattleDroid(Combatant):
         self.hp = 1
         self.miss_rate = 0.7
                     
+    def set_attacking(self, value):
+        pass # do nothing
 
 class Agent(Combatant):
     speciality = "agent"

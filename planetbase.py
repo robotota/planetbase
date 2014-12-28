@@ -35,31 +35,24 @@ class PlanetBase(Cmd):
         self.prompt = "> "
         self.intro = "Planetbase sim"
     
-
     def do_status(self, line):
         state.printStatus()
-
 
     def help_status(self):
         print "Show current base status"
         
-
     def do_exit(self, line):
         exit()
-
 
     def help_exit(self):
         print "Exit simulation"
         
-
     def do_units(self, line):
         print state.units    
-
 
     def help_units(self):
         print "Show active units"
         
-
     def do_train(self, line):
         if line=="agent":
             starttraining(TrainableAgent(namegen.createName()))
@@ -70,10 +63,8 @@ class PlanetBase(Cmd):
         else:
             print "train who?"
 
-
     def complete_train(self, text, line, i, j):
         return startswith(text, ["agent", "medic", "droid"])
-
 
     def help_train(self):
         print "Start training [agent], [medic] or [droid]"
@@ -81,8 +72,23 @@ class PlanetBase(Cmd):
         print "train agent"
         print "train droid"
 
+    def do_attack(self, line):
+        #all current agents move to attack
+        if line == "":
+            for unit in state.units:
+                unit.set_attacking(True)
+        elif line == "stop":
+            for unit in state.units:
+                unit.set_attacking(False)
+        else:
+            print "what?!"
+    def complete_attack(self, text, line, i, j):
+        return startswith(text, ["stop"])
 
-    def do_build(self,line):
+    def help_attack(self):
+        print "Send living units to attack enemy"
+
+    def do_build(self, line):
         if line == "powergen":
             startbuilding(PowerGenerator())
         elif line == "massgen":
@@ -98,7 +104,6 @@ class PlanetBase(Cmd):
     def complete_build(self, text, line, i, j):
         return startswith(text, ["powergen", "massgen", "transport", "powerline"])
 
-
     def help_build(self):
         print "Start construction of new building"
         print "    build powergen"
@@ -106,7 +111,6 @@ class PlanetBase(Cmd):
         print "    build transport"
         print "    build powerline"                
         
-
     def do_stop(self, line):
         try:
             state.buildings[int(line)].stop()
@@ -117,7 +121,6 @@ class PlanetBase(Cmd):
         print "Stop active building"
         print "    stop NUMBER"        
             
-
     def do_start(self, line):
         try:
             state.buildings[int(line)].start()
@@ -138,10 +141,8 @@ class PlanetBase(Cmd):
         self.end_turn()
         self.begin_turn()
 
-
-    def begin_turn(self):
-        state.buildings = filter(lambda x: x!=None, state.buildings)
-        attackers = [unit for unit in state.enemy_units if random.random() < 0.01]
+    def defend_base(self):
+        attackers = [unit for unit in state.enemy_units if random.random() < 0.005]
 
         if len(attackers) >0:
             state.warning("We were attacked by " +str(len(attackers)) + " unit(s)")
@@ -156,7 +157,7 @@ class PlanetBase(Cmd):
                 if unit not in defenders:
                     state.badnews(unit.name + " KIA")
                     state.units.remove(unit)
-                    
+
             if not state.units:
                 state.badnews("Enemy broke through!")
                 for i in range(len(real_attackers)):
@@ -164,12 +165,36 @@ class PlanetBase(Cmd):
                     if random.random()<0.1:
                         state.badnews(str(b) + " was destroyed")
                         state.buildings.remove(b)
+
+    def perform_mission(self):
+        our_units = [unit for unit in state.units if unit.attacking]
+        attackers = [unit for unit in state.enemy_units if random.random() < 0.01]
+
+        if our_units and attackers:
+            state.warning("Encountered " +str(len(attackers)) + " unit(s)")
+            real_attackers = attackers[:]
+            defenders = state.units[:]
+            combat.play(our_units, real_attackers)
+            for unit in attackers:
+                if unit not in real_attackers:
+                    state.enemy_units.remove(unit)
+            for unit in state.units:
+                if unit not in our_units:
+                    state.badnews(unit.name + " KIA in a mission")
+                    state.units.remove(unit)
+
+    def begin_turn(self):
+        state.buildings = filter(lambda x: x!=None, state.buildings)
+        self.defend_base()
+        if not state.buildings:
+            raise Exception("YOU LOST")
         state.buildings.sort(key = lambda x: x.sortkey())
         state.printStatus()    
 
     def autoheal(self):
         for unit in state.units:
-            if unit.wounded() and state.transport >0 and state.mass > 0 and state.energy >0 and state.powerline >0:
+            if unit.wounded() and state.transport > 0 and state.mass > 0 and \
+                    state.energy > 0 and state.powerline > 0:
                 unit.heal()
                 state.transport -= 1
                 state.mass -= 1
@@ -189,11 +214,12 @@ class PlanetBase(Cmd):
                 unit.levelup()
             elif r < 0.03:
                 new_units.append(combat.AngryAnt("enemy"))
-            elif r<0.5:
+            elif r < 0.5:
                 unit.heal()
         state.enemy_units += new_units
 
     def end_turn(self):
+        self.perform_mission()
         state.clear()
         self.tick_buildings()
         self.autoheal()

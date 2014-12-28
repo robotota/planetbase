@@ -59,3 +59,5 @@ class State:
         self.transport_capacity = 0
         self.powerline = 0
         self.powerline_capacity = 0
+        for unit in self.units:
+            unit.set_attacking(False)
