@@ -1,5 +1,4 @@
 # -*- encoding: utf-8 -*-
-from libxml2 import xmlTextReaderLocator
 
 import sys
 import random
@@ -140,6 +139,7 @@ class PlanetBase(Cmd):
     def emptyline(self):
         self.end_turn()
         self.begin_turn()
+
 
     def defend_base(self):
         attackers = [unit for unit in state.enemy_units if random.random() < 0.005]
